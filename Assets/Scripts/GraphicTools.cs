@@ -10,7 +10,7 @@ public class GraphicTools
     private static bool graphicToolsInitialized = false;
 
     //A transform to put objects created here in, to tidy up the scene
-    private static Transform rootTransform = new GameObject("[GRAPHIC TOOLS]").transform;
+    private static Transform rootTransform;
 
     //Camera used to render effects
     private static Camera camera;
@@ -19,8 +19,12 @@ public class GraphicTools
     private static Canvas canvas;
     private static Image image;
 
-    public static void InitializeGraphicTools()
+    private static Mesh quad;
+
+    private static void InitializeGraphicTools()
     {
+        rootTransform = new GameObject("[GRAPHIC TOOLS]").transform;
+
         camera = new GameObject("BlitCamera").AddComponent<Camera>();
         camera.transform.parent = rootTransform;
         camera.enabled = false;
@@ -67,6 +71,16 @@ public class GraphicTools
         image.gameObject.SetActive(false);
     }
 
+    public static void Blit(RenderTexture source, RenderTexture dest = null, Material material = null, Rect? sourceRect = null, Rect? destRect = null)
+    {
+        Texture2D convertedSource = new Texture2D(source.width, source.height);
+        RenderTexture previousActiveRenderTexture = RenderTexture.active;
+        RenderTexture.active = source;
+        convertedSource.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
+        RenderTexture.active = previousActiveRenderTexture;
+        Blit(convertedSource, dest, material, sourceRect, destRect);
+    }
+
     /// <summary>
     /// Get a rect that covers the full screen or texture, mesured in pixels with the lower left corner at (0,0)
     /// </summary>
@@ -80,6 +94,8 @@ public class GraphicTools
         }
         return new Rect(0,0,texture.width, texture.height);
     }
+
+    
 
     // /// <summary>
     // /// Convert a rect from Screen coordinates (mesured in pixels with the lower left corner at (0,0))

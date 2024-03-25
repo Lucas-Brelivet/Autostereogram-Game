@@ -38,8 +38,9 @@ Material:
     - _OffsetCoef: 1
     - _PanelCount: 10
     - _PanelIndex: 9
-    - _PixelsPerMeter: 47.28
+    - _PanelWidth: 218
+    - _PixelsPerMeter: 4724.4
     - _PupilDistance: 0.066
-    - _RandomSeed: 236
+    - _RandomSeed: 939
     m_Colors: []
   m_BuildTextureStacks: []

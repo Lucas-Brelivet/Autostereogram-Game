@@ -4,16 +4,15 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class AutosterogramCamera : MonoBehaviour
+public class AutostereogramCamera : MonoBehaviour
 {
-    private readonly int rectPropertyId = Shader.PropertyToID("_Rect");
     private readonly int randomSeedPropertyId = Shader.PropertyToID("_RandomSeed");
 
     [SerializeField]
-    private Material autostereogramMaterial;
+    private Camera autostereogramCamera;
 
     [SerializeField]
-    private Material blitToRectMaterial;
+    private Material autostereogramMaterial;
 
     [SerializeField]
     private Texture depthTexture;
@@ -31,30 +30,32 @@ public class AutosterogramCamera : MonoBehaviour
     private float eyesToScreenDistance = 0.3f;
 
     private float pixelsPerMeter;
+    private int maxPixelInterval;
+
+    private int panelWidth;
+    private const int minPanelWidth = 150;
 
     private RenderTexture stereoImage;
     
-    private RenderTexture column;
 
     // Start is called before the first frame update
     void Start()
     {
-        GraphicTools.InitializeGraphicTools();
-        GraphicTools.Blit(null, null);
-
-        pixelsPerMeter = Screen.dpi * 0.394f;
-        int maxPixelInterval = (int)(pupilDistance * pixelsPerMeter);
+        pixelsPerMeter = Screen.dpi * 39.37f;
+        maxPixelInterval = (int)(pupilDistance * pixelsPerMeter);
         
         autostereogramMaterial.SetFloat("_PupilDistance", pupilDistance);
         autostereogramMaterial.SetFloat("_PixelsPerMeter", pixelsPerMeter);
         autostereogramMaterial.SetFloat("_EyesToScreenDistance", eyesToScreenDistance);
         
-        depthTexture.width = Screen.width;
+        panelWidth = Mathf.Max(minPanelWidth, (int)(pupilDistance * (autostereogramCamera.nearClipPlane - eyesToScreenDistance) / autostereogramCamera.nearClipPlane * pixelsPerMeter));
+        autostereogramMaterial.SetInt("_PanelWidth", panelWidth);
+
+        depthTexture.width = Screen.width - panelWidth;
         depthTexture.height = Screen.height;
         autostereogramMaterial.SetTexture("_DepthTex", depthTexture);
 
-        column = new RenderTexture(new RenderTextureDescriptor(1, Screen.height));
-        stereoImage  = new RenderTexture(new RenderTextureDescriptor(1, Screen.height));
+        stereoImage  = new RenderTexture(new RenderTextureDescriptor(Screen.width, Screen.height));
 
         leftVisualGuide.anchoredPosition = new Vector2(-maxPixelInterval/2f, leftVisualGuide.anchoredPosition.y);
         rightVisualGuide.anchoredPosition = new Vector2(maxPixelInterval/2f, rightVisualGuide.anchoredPosition.y);
@@ -64,50 +65,29 @@ public class AutosterogramCamera : MonoBehaviour
     // Called when the camera component on this object finishes rendering
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        //Render each pixel column for the right eye based on the already
-        //rendered left side of the image and the depth information
+        
+        //Update the random patern of the shader
         autostereogramMaterial.SetInt(randomSeedPropertyId, Random.Range(0, 1000));
-        stereoImage.Release();
-        stereoImage  = new RenderTexture(new RenderTextureDescriptor(1, Screen.height));
-        Graphics.Blit(null, stereoImage, autostereogramMaterial);
 
-        
-        // for(int x = 1; x < Screen.width; x++)
-        // {
-        //     Graphics.Blit(stereoImage, column, autostereogramMaterial);
-        //     AddColumn(column, ref stereoImage);
-        // }
+        //Divide the image into panels and render each panel for the right eye based on the already
+        //rendered left side of the image and the depth information
+        GraphicTools.Blit((Texture2D)null, stereoImage, autostereogramMaterial, null, new Rect(0, 0, panelWidth, stereoImage.height));
+        for(int i = 1; i <= DivideRoundingUp(Screen.width, panelWidth); i++)
+        {
+            GraphicTools.Blit(stereoImage, stereoImage, autostereogramMaterial, null, new Rect(0, 0, panelWidth, stereoImage.height));
+        }
 
-        //Display the stereo image on screen
-        destination = stereoImage;
+        GraphicTools.Blit(stereoImage, destination);
     }
 
-
-    /// <summary>
-    /// Adds the given column texture at the end of the destination texture
-    /// </summary>
-    /// <param name="column">The 1 pixel wide texture to add</param>
-    /// <param name="dest"> The destination texture
-    private void AddColumn(Texture column, ref RenderTexture dest)
+    public static int DivideRoundingUp(int x, int y)
     {
-        RenderTexture result = StitchTextures(dest, column);
-        dest.Release();
-        dest = result;
+        int remainder;
+        int quotient = System.Math.DivRem(x, y, out remainder);
+        return remainder == 0 ? quotient : quotient + 1;
     }
 
 
-    private RenderTexture StitchTextures(Texture left, Texture right)
-    {
-        RenderTexture output = new RenderTexture(new RenderTextureDescriptor(left.width + right.width, left.height));
-        float stitchClipSpaceLocation = 2 * left.width/output.width - 1;
-        blitToRectMaterial.SetVector(rectPropertyId, new Vector4(0, -1, stitchClipSpaceLocation, 1));
-        Graphics.Blit(left, output, blitToRectMaterial);
-        
-        blitToRectMaterial.SetVector(rectPropertyId, new Vector4(stitchClipSpaceLocation, -1, 1, 1));
-        Graphics.Blit(right, output, blitToRectMaterial);
-
-        return output;
-    }
 
     /// <summary>
     /// Calculates the minimum depth of the depth texture in the given rect

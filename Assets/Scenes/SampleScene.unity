@@ -384,7 +384,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 10
   field of view: 60
   orthographic: 0
@@ -635,7 +635,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!20 &1645865963
 Camera:
   m_ObjectHideFlags: 0
@@ -704,7 +704,7 @@ MonoBehaviour:
     y: 200
     width: 400
     height: 500
-  compositeImage: {fileID: 8400000, guid: b55ed6db1837aca4a86926ea5cb63b65, type: 2}
+  compositeImage: {fileID: 0}
 --- !u!4 &1645865965
 Transform:
   m_ObjectHideFlags: 0
@@ -737,7 +737,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!20 &1669480535
 Camera:
   m_ObjectHideFlags: 0

@@ -47,6 +47,7 @@ public class AutostereogramCamera : MonoBehaviour
         autostereogramMaterial.SetFloat("_PupilDistance", pupilDistance);
         autostereogramMaterial.SetFloat("_PixelsPerMeter", pixelsPerMeter);
         autostereogramMaterial.SetFloat("_EyesToScreenDistance", eyesToScreenDistance);
+        //autostereogramMaterial.SetFloat("_MinDepthValue", GlobalConstants.MIN_DEPTH_VALUE);
         
         panelWidth = Mathf.Max(minPanelWidth, (int)(pupilDistance * (autostereogramCamera.nearClipPlane - eyesToScreenDistance) / autostereogramCamera.nearClipPlane * pixelsPerMeter));
         autostereogramMaterial.SetInt("_PanelWidth", panelWidth);
@@ -71,10 +72,11 @@ public class AutostereogramCamera : MonoBehaviour
 
         //Divide the image into panels and render each panel for the right eye based on the already
         //rendered left side of the image and the depth information
-        GraphicTools.Blit((Texture2D)null, stereoImage, autostereogramMaterial, null, new Rect(0, 0, panelWidth, stereoImage.height));
-        for(int i = 1; i <= DivideRoundingUp(Screen.width, panelWidth); i++)
+        Rect panelRect = new Rect(0, 0, panelWidth, stereoImage.height);
+        for(int i = 0; i <= DivideRoundingUp(Screen.width, panelWidth); i++)
         {
-            GraphicTools.Blit(stereoImage, stereoImage, autostereogramMaterial, null, new Rect(0, 0, panelWidth, stereoImage.height));
+            panelRect.x = i*panelWidth;
+            GraphicTools.Blit(stereoImage, stereoImage, autostereogramMaterial, panelRect, panelRect);
         }
 
         GraphicTools.Blit(stereoImage, destination);

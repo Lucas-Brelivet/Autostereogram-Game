@@ -1,4 +1,4 @@
-Shader "Unlit/Depth"
+Shader "Unlit/Distance"
 {
     Properties
     {
@@ -27,7 +27,7 @@ Shader "Unlit/Depth"
             struct v2f
             {
                 float4 vertex : SV_POSITION;
-                float depth : DEPTH;
+                float distance : DISTANCE;
             };
 
             v2f vert (appdata v)
@@ -35,17 +35,17 @@ Shader "Unlit/Depth"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 float3 viewSpacePosition = UnityObjectToViewPos(v.vertex);
-                o.depth = map(-mul(UNITY_MATRIX_MV, v.vertex).z, _MinDepthValue, _ProjectionParams.z, 0, 1);
-                if(o.depth < 0)
+                o.distance = map(length(mul(UNITY_MATRIX_MV, v.vertex)), _MinDepthValue, _ProjectionParams.z, 0, 1);
+                if(o.distance < 0)
                 {
-                    o.depth = 0;
+                    o.distance = 0;
                 }
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                fixed4 col = i.depth;
+                fixed4 col = i.distance;
                 return col;
             }
             ENDCG

@@ -16,9 +16,10 @@ public class Tests : MonoBehaviour
         //compositeImage = new RenderTexture(Screen.width, Screen.height, 32);
     }
 
-    // Update is called once per frame
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
+        RenderTexture.active = null;
+        GL.Clear(true, true, Color.black);
         GraphicTools.Blit(sourceTexture, null, null, sourceRect, destRect);
         return;
         GraphicTools.Blit(sourceTexture, compositeImage, null, sourceRect, destRect);

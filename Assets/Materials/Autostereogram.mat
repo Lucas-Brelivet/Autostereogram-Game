@@ -35,12 +35,13 @@ Material:
     m_Ints: []
     m_Floats:
     - _EyesToScreenDistance: 0.3
+    - _MinDepthValue: 1
     - _OffsetCoef: 1
     - _PanelCount: 10
     - _PanelIndex: 9
     - _PanelWidth: 218
     - _PixelsPerMeter: 4724.4
     - _PupilDistance: 0.066
-    - _RandomSeed: 939
+    - _RandomSeed: 673
     m_Colors: []
   m_BuildTextureStacks: []

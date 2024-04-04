@@ -1,9 +1,5 @@
 Shader "Unlit/Depth"
 {
-    Properties
-    {
-        _MinDepthValue("Min Depth Value", float) = 1
-    }
     SubShader
     {
         LOD 100
@@ -17,8 +13,6 @@ Shader "Unlit/Depth"
             #include "UnityCG.cginc"
             #include "ShaderUtils.cginc"
 
-            float _MinDepthValue;
-
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -30,23 +24,22 @@ Shader "Unlit/Depth"
                 float depth : DEPTH;
             };
 
+            float _MinDepthValue;
+            float _MaxDepthValue;
+
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 float3 viewSpacePosition = UnityObjectToViewPos(v.vertex);
-                o.depth = map(-mul(UNITY_MATRIX_MV, v.vertex).z, _MinDepthValue, _ProjectionParams.z, 0, 1);
-                if(o.depth < 0)
-                {
-                    o.depth = 0;
-                }
+                o.depth = map(-mul(UNITY_MATRIX_MV, v.vertex).z, _MinDepthValue, _MaxDepthValue, 0, 1);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                fixed4 col = i.depth;
-                return col;
+                float clampedDepth = max(i.depth, 0);
+                return encode1To4Chanels(clampedDepth);
             }
             ENDCG
         }

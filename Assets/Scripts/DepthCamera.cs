@@ -9,9 +9,9 @@ public class DepthCamera : MonoBehaviour
     private Shader depthShader;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        Shader.SetGlobalFloat("_MinDepthValue", GlobalConstants.MIN_DEPTH_VALUE);
         depthCamera.SetReplacementShader(depthShader, null);
+        depthCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, 0);
     }
 }

@@ -3,14 +3,12 @@ Shader "Unlit/Autostereogram"
     Properties
     {
         _MainTex ("Stereo Image", 2D) = "white" {}
-        _RightDistanceTex ("Right Eye Distance Texture", 2D) = "white" {}
-        _LefttDistanceTex ("Left Eye Distance Texture", 2D) = "white" {}
+        _RightDepthTex ("Right Eye Depth Texture", 2D) = "white" {}
+        _LeftDepthTex ("Left Eye Depth Texture", 2D) = "white" {}
         _EyesToScreenDistance("Distance between eyes and screen", float) = 0.3
         _PupilDistance("Distance between pupils", float) = 0.066
         _PixelsPerMeter("Pixels per meter", float) = 5760
-        _PanelWidth("Panel width", int) = 100
         _RandomSeed("Random Seed", int) = 0
-        _MinDepthValue("Min Depth Value", float) = 1
     }
 
     //This shader allows to render an autostereogram based on a depth image.
@@ -37,21 +35,16 @@ Shader "Unlit/Autostereogram"
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            sampler2D _DepthTex;
-            float4 _DepthTex_TexelSize;
+            sampler2D _RightDepthTex;
+            sampler2D _LeftDepthTex;
 
             float _EyesToScreenDistance;
             float _PupilDistance;
             float _PixelsPerMeter;
-            int _PanelWidth;
             uint _RandomSeed;
+
             float _MinDepthValue;
-
-
-            float max(float x, float y)
-            {
-                return x > y ? x : y;
-            }
+            float _MaxDepthValue;
 
             //Hashes for pseudo random pixels
             uint hashi(uint x)
@@ -69,6 +62,25 @@ Shader "Unlit/Autostereogram"
                 return float( hashi(x) ) / float( 0xffffffffU );
             }
 
+            float4 colorHash(float2 uv)
+            {
+                float4 col;
+                uint2 uvInt = uint2(uv * _MainTex_TexelSize.zw);
+                col.x = hash(uvInt.x + hashi(uvInt.y) + _RandomSeed);
+                col.y = hash(uvInt.x + hashi(uvInt.y) - _RandomSeed);
+                col.z = hash(uvInt.x - hashi(uvInt.y) - _RandomSeed);
+                return col;
+            }
+
+            //reads the depth from the given depth texture at the given uv
+            float readDepth(sampler2D depthTex, float2 uv)
+            {
+                float normalizedDepth = decode4To1Chanels(tex2D(depthTex, uv));
+                return map(normalizedDepth, 0, 1, _MinDepthValue, _MaxDepthValue);
+            }
+
+
+            //Input structs
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -79,52 +91,47 @@ Shader "Unlit/Autostereogram"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
-                float4 screenPos : TEXCOORD1;
             };
 
+
+            //Shader functions
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
-                o.screenPos = ComputeScreenPos(o.vertex);
-                o.screenPos /= o.screenPos.w;
-                o.screenPos *= float4(_ScreenParams.xy, 1, 1);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                if(i.screenPos.x > _PanelWidth)
+                float normalizedPanelWidth = _PupilDistance/2 * _PixelsPerMeter * _MainTex_TexelSize.x;
+                //Determine which uv on the right eye depth image this point corresponds to
+                float2 rightEyeDepthUV = i.uv - float2(normalizedPanelWidth, 0);
+                //Get the deth that the right eye sees
+                float rightDepth = readDepth(_RightDepthTex, rightEyeDepthUV);
+                //return (rightDepth-_MinDepthValue)/_MaxDepthValue;
+                //Determine where the left eye should be looking on the scrren to see the correct depth, using Thales' theorem
+                float2 leftEyeScreenUV = float2(i.uv.x - (_PupilDistance * (rightDepth - _EyesToScreenDistance) / rightDepth) * _PixelsPerMeter * _MainTex_TexelSize.x, i.uv.y);
+                //return 1-((i.uv-leftEyeScreenUV).x-normalizedPanelWidth)/normalizedPanelWidth;
+                if(leftEyeScreenUV.x >= 0)
                 {
-                    // Find a pixel in the left eye image that would have its right eye version on the current pixel and copy the color of that pixel
-
-                    float xMin = max(0, i.screenPos.x - _PupilDistance * _PixelsPerMeter); //Minimal x where the corresponding pixel can be
-
-                    //Look at each pixel from right to left, because the one one the right correspond to closer points,
-                    // and would hide other farther matches
-                    [loop]
-                    for(float x = i.screenPos.x - _PanelWidth; x >= xMin; x--)
+                    //Determine which uv on the left eye depth image corresponds to where the left eye looks
+                    float2 leftEyeDepthUV = leftEyeScreenUV + float2(normalizedPanelWidth, 0);
+                    //return half4((leftEyeDepthUV-rightEyeDepthUV)/normalizedPanelWidth,0,0);
+                    //Check if the left eye sees the same depth, or if something else hides its view
+                    float leftDepth = readDepth(_LeftDepthTex, leftEyeDepthUV);
+                    //return abs(leftDepth-rightDepth)/_MaxDepthValue;
+                    //return equal(leftDepth, rightDepth, 0.15);
+                    if(equal(leftDepth, rightDepth, 0.15))
                     {
-                        float2 depthUV = float2(x/_DepthTex_TexelSize.z, i.uv.y); //The uv corresponding to the pixel we're testing on the depth texture
-                        float depth = map(tex2D(_DepthTex, depthUV).x, 0, 1, _MinDepthValue, _ProjectionParams.z); //The depth the tested pixel is supposed to have
-
-                        int currentPixelInterval = i.screenPos.x - x; //The distance in pixels between the tested pixel and the pixel we're drawing/
-                        int neededPixelInterval = _PupilDistance * (depth - _EyesToScreenDistance) / depth * _PixelsPerMeter; //The distance the tested pixel must be from its right eye counterpart in order to perceive the appropriate depth
-
-                        if(neededPixelInterval == currentPixelInterval) //If we have found the left ey pixel, copy its color to the current pixel
-                        {
-                            float2 mainTexUV = float2(x/_MainTex_TexelSize.z, i.uv.y);
-                            return tex2D(_DepthTex, depthUV);//-_MinDepthValue;
-                            return float4(mainTexUV,0,0);
-                            return tex2D(_MainTex, mainTexUV);
-                        }
+                        //if both eyes see the same depth, copy the left eye pixel on the main texture to this pixel
+                        return tex2D(_MainTex, leftEyeScreenUV);
                     }
                 }
 
-                // If no corresponding pixel was found, color this fragment pseudo randomly
-                uint2 uvInt = uint2(i.uv * _MainTex_TexelSize.zw);
-                fixed4 col = hash(uvInt.x + hashi(uvInt.y) + _RandomSeed);
+                // If the two eyes see different depths, or if the left eye looks outside the screen, color the pixel randomly
+                fixed4 col = colorHash(i.uv);
                 return col;
             }
             ENDCG

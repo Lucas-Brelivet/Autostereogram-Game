@@ -24,11 +24,19 @@ Material:
         m_Texture: {fileID: 8400000, guid: 3194fca52ff26e947be168f8e2e20bcf, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _LeftDepthTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PatternTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RightDepthTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -40,8 +48,8 @@ Material:
     - _PanelCount: 10
     - _PanelIndex: 9
     - _PanelWidth: 218
-    - _PixelsPerMeter: 4724.4
+    - _PixelsPerMeter: 4093.3428
     - _PupilDistance: 0.066
-    - _RandomSeed: 673
+    - _RandomSeed: 257
     m_Colors: []
   m_BuildTextureStacks: []

@@ -9,13 +9,12 @@ public class AutostereogramCamera : MonoBehaviour
     private readonly int randomSeedPropertyId = Shader.PropertyToID("_RandomSeed");
 
     [SerializeField]
-    private Camera autostereogramCamera;
-
-    [SerializeField]
     private Material autostereogramMaterial;
 
     [SerializeField]
-    private Texture depthTexture;
+    private Camera leftEyeDepthCamera;
+    [SerializeField]
+    private Camera rightEyeDepthCamera;
 
     [SerializeField]
     private RectTransform leftVisualGuide;
@@ -29,37 +28,52 @@ public class AutostereogramCamera : MonoBehaviour
     [SerializeField]
     private float eyesToScreenDistance = 0.3f;
 
-    private float pixelsPerMeter;
+    [SerializeField]
+    private float maxDepthValue = 100f;
+
+    [SerializeField]
+    private RenderTexture stereoImage;
+
+    private float texturePixelsPerMeter;
     private int maxPixelInterval;
 
     private int panelWidth;
-    private const int minPanelWidth = 150;
-
-    private RenderTexture stereoImage;
     
 
     // Start is called before the first frame update
     void Start()
     {
-        pixelsPerMeter = Screen.dpi * 39.37f;
-        maxPixelInterval = (int)(pupilDistance * pixelsPerMeter);
+        //Set various variables
+        float physicalPixelsPerMeter = Screen.dpi * 39.37f;
+        texturePixelsPerMeter = stereoImage.width * physicalPixelsPerMeter / Screen.width;
+        maxPixelInterval = (int)(pupilDistance * texturePixelsPerMeter);
+        panelWidth = maxPixelInterval / 2;
+        float minDepthValue = eyesToScreenDistance * 2;
+        float horizontalFOV = 2 * Mathf.Atan(Screen.width / physicalPixelsPerMeter / 2 / eyesToScreenDistance) * 180 / Mathf.PI;
+        float verticalFOV = Camera.HorizontalToVerticalFieldOfView(horizontalFOV, leftEyeDepthCamera.aspect);
         
+        //Set global shader properties
+        Shader.SetGlobalFloat("_MinDepthValue", minDepthValue);
+        Shader.SetGlobalFloat("_MaxDepthValue", maxDepthValue);
+
+        //Set material properties
         autostereogramMaterial.SetFloat("_PupilDistance", pupilDistance);
-        autostereogramMaterial.SetFloat("_PixelsPerMeter", pixelsPerMeter);
+        autostereogramMaterial.SetFloat("_PixelsPerMeter", texturePixelsPerMeter);
         autostereogramMaterial.SetFloat("_EyesToScreenDistance", eyesToScreenDistance);
-        //autostereogramMaterial.SetFloat("_MinDepthValue", GlobalConstants.MIN_DEPTH_VALUE);
+        autostereogramMaterial.SetTexture("_LeftDepthTex", leftEyeDepthCamera.targetTexture);
+        autostereogramMaterial.SetTexture("_RightDepthTex", rightEyeDepthCamera.targetTexture);
         
-        panelWidth = Mathf.Max(minPanelWidth, (int)(pupilDistance * (autostereogramCamera.nearClipPlane - eyesToScreenDistance) / autostereogramCamera.nearClipPlane * pixelsPerMeter));
-        autostereogramMaterial.SetInt("_PanelWidth", panelWidth);
 
-        depthTexture.width = Screen.width - panelWidth;
-        depthTexture.height = Screen.height;
-        autostereogramMaterial.SetTexture("_DepthTex", depthTexture);
+        //Position depth cameras properly
+        leftEyeDepthCamera.transform.localPosition = new Vector3(-pupilDistance/2, 0, 0);
+        rightEyeDepthCamera.transform.localPosition = new Vector3(pupilDistance/2, 0, 0);
+        leftEyeDepthCamera.fieldOfView = verticalFOV;
+        rightEyeDepthCamera.fieldOfView = verticalFOV;
 
-        stereoImage  = new RenderTexture(new RenderTextureDescriptor(Screen.width, Screen.height));
 
-        leftVisualGuide.anchoredPosition = new Vector2(-maxPixelInterval/2f, leftVisualGuide.anchoredPosition.y);
-        rightVisualGuide.anchoredPosition = new Vector2(maxPixelInterval/2f, rightVisualGuide.anchoredPosition.y);
+        //Position visual guides
+        leftVisualGuide.anchoredPosition = new Vector2(-pupilDistance/2f * 1000, leftVisualGuide.anchoredPosition.y);
+        rightVisualGuide.anchoredPosition = new Vector2(pupilDistance/2f * 1000, rightVisualGuide.anchoredPosition.y);
 
     }
 
@@ -67,7 +81,7 @@ public class AutostereogramCamera : MonoBehaviour
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         
-        //Update the random patern of the shader
+        //Update the random pattern of the shader
         autostereogramMaterial.SetInt(randomSeedPropertyId, Random.Range(0, 1000));
 
         //Divide the image into panels and render each panel for the right eye based on the already
@@ -89,45 +103,5 @@ public class AutostereogramCamera : MonoBehaviour
         return remainder == 0 ? quotient : quotient + 1;
     }
 
-
-
-    /// <summary>
-    /// Calculates the minimum depth of the depth texture in the given rect
-    /// </summary>
-    /// <returns>The calculated depth value</returns>
-    private float MinDepth(int xMin, int yMin, int width, int height)
-    {
-        RenderTextureDescriptor rtDescriptor = new RenderTextureDescriptor(width/2, height/2, RenderTextureFormat.Depth);
-        return 0;
-    }
-
-    private void CreateScreenMesh(int width, int height, float pixelsPerUnit, out Mesh mesh)
-    {
-        mesh = new Mesh();
-        for(int i = 0; i < width; i++)
-        {
-            for(int j = 0; j < height; j++)
-            {
-                mesh.vertices.Append<Vector3>(new Vector3(i*pixelsPerUnit, j*pixelsPerUnit, 0));
-            }
-        }
-
-        //Add triangles
-        for(int i = 0; i < width-1; i++)
-        {
-            for(int j = 0; j < height-1; j++)
-            {
-                int lowerLeftIndex = i*height + j;
-                mesh.triangles.Append(lowerLeftIndex);
-                mesh.triangles.Append(lowerLeftIndex + 1);
-                mesh.triangles.Append(lowerLeftIndex + 1 + height);
-
-                
-                mesh.triangles.Append(lowerLeftIndex);
-                mesh.triangles.Append(lowerLeftIndex + 1 + height);
-                mesh.triangles.Append(lowerLeftIndex + height);
-            }
-        }
-    }
 
 }

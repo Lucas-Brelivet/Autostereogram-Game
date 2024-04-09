@@ -9,6 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Autostereogram
   m_Shader: {fileID: 4800000, guid: 980102b22edf8464c8f7f1e1a8ff1939, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -17,6 +19,7 @@ Material:
   m_CustomRenderQueue: 2020
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -42,14 +45,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EyesToScreenDistance: 0.3
+    - _EyesToScreenDistance: 0.2
     - _MinDepthValue: 1
     - _OffsetCoef: 1
     - _PanelCount: 10
     - _PanelIndex: 9
     - _PanelWidth: 218
-    - _PixelsPerMeter: 4093.3428
-    - _PupilDistance: 0.066
-    - _RandomSeed: 257
+    - _PixelsPerMeter: 2954.6736
+    - _PupilDistance: 0.06
+    - _RandomSeed: 666
     m_Colors: []
   m_BuildTextureStacks: []

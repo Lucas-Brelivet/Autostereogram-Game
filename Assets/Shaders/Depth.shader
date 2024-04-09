@@ -12,6 +12,7 @@ Shader "Unlit/Depth"
 
             #include "UnityCG.cginc"
             #include "ShaderUtils.cginc"
+ 
 
             struct appdata
             {
@@ -31,8 +32,7 @@ Shader "Unlit/Depth"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                float3 viewSpacePosition = UnityObjectToViewPos(v.vertex);
-                o.depth = map(-mul(UNITY_MATRIX_MV, v.vertex).z, _MinDepthValue, _MaxDepthValue, 0, 1);
+                o.depth = map(abs(mul(UNITY_MATRIX_MV, v.vertex).z), _MinDepthValue, _MaxDepthValue, 0, 1);
                 return o;
             }
 

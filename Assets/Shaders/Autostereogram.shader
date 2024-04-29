@@ -42,8 +42,6 @@ Shader "Unlit/Autostereogram"
             float _PupilDistance;
             float _PixelsPerMeter;
             uint _RandomSeed;
-
-            float _MinDepthValue;
             float _MaxDepthValue;
 
             //Hashes for pseudo random pixels
@@ -75,8 +73,8 @@ Shader "Unlit/Autostereogram"
             //reads the depth from the given depth texture at the given uv
             float readDepth(sampler2D depthTex, float2 uv)
             {
-                float normalizedDepth = decode4To1Chanels(tex2D(depthTex, uv));
-                return map(normalizedDepth, 0, 1, _MinDepthValue, _MaxDepthValue);
+                return tex2D(depthTex, uv)*_MaxDepthValue;
+                return max(tex2D(depthTex, uv)*_MaxDepthValue, _EyesToScreenDistance * 2);
             }
 
 
@@ -108,21 +106,19 @@ Shader "Unlit/Autostereogram"
                 float normalizedPanelWidth = _PupilDistance/2 * _PixelsPerMeter * _MainTex_TexelSize.x;
                 //Determine which uv on the right eye depth image this point corresponds to
                 float2 rightEyeDepthUV = i.uv - float2(normalizedPanelWidth, 0);
-                //Get the deth that the right eye sees
+                //Get the depth that the right eye sees
                 float rightDepth = readDepth(_RightDepthTex, rightEyeDepthUV);
-                //return (rightDepth-_MinDepthValue)/_MaxDepthValue;
-                //Determine where the left eye should be looking on the scrren to see the correct depth, using Thales' theorem
+                return rightDepth/_MaxDepthValue;
+                //Determine where the left eye should be looking on the screen to see the correct depth, using Thales' theorem
                 float2 leftEyeScreenUV = float2(i.uv.x - (_PupilDistance * (rightDepth - _EyesToScreenDistance) / rightDepth) * _PixelsPerMeter * _MainTex_TexelSize.x, i.uv.y);
                 //return 1-((i.uv-leftEyeScreenUV).x-normalizedPanelWidth)/normalizedPanelWidth;
                 if(leftEyeScreenUV.x >= 0)
                 {
                     //Determine which uv on the left eye depth image corresponds to where the left eye looks
                     float2 leftEyeDepthUV = leftEyeScreenUV + float2(normalizedPanelWidth, 0);
-                    //return half4((leftEyeDepthUV-rightEyeDepthUV)/normalizedPanelWidth,0,0);
                     //Check if the left eye sees the same depth, or if something else hides its view
                     float leftDepth = readDepth(_LeftDepthTex, leftEyeDepthUV);
-                    //return abs(leftDepth-rightDepth)/_MaxDepthValue;
-                    //return equal(leftDepth, rightDepth, 0.15);
+
                     if(equal(leftDepth, rightDepth, 0.15))
                     {
                         //if both eyes see the same depth, copy the left eye pixel on the main texture to this pixel

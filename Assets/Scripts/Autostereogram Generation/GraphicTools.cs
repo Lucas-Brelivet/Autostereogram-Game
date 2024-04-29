@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public static class GraphicTools
 {
     private const int EFFECTS_RENDERING_LAYER = 7;
-    //private const float QUAD_DISTANCE_FROM_CAMERA = 1;
     private static readonly Material DEFAULT_BLIT_MATERIAL = new Material(Shader.Find("Unlit/Texture"));
     private static readonly int MAIN_TEX_ID = Shader.PropertyToID("_MainTex");
 

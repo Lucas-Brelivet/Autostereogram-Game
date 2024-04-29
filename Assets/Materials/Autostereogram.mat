@@ -40,19 +40,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RightDepthTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 8400000, guid: d3071f099361a014ba269c0429740130, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EyesToScreenDistance: 0.2
+    - _EyesToScreenDistance: 0.5
     - _MinDepthValue: 1
     - _OffsetCoef: 1
     - _PanelCount: 10
     - _PanelIndex: 9
     - _PanelWidth: 218
     - _PixelsPerMeter: 2954.6736
-    - _PupilDistance: 0.06
-    - _RandomSeed: 666
+    - _PupilDistance: 0.07
+    - _RandomSeed: 660
     m_Colors: []
   m_BuildTextureStacks: []

@@ -15,7 +15,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "LookDesktop",
+                    "name": "Look",
                     "type": "Value",
                     "id": "5281bffd-3cab-4c12-9e29-de5a12405543",
                     "expectedControlType": "Vector2",
@@ -24,13 +24,22 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "LookHandHeld",
-                    "type": "Value",
-                    "id": "a7ccf15e-6f03-482f-b6ce-4983eb973759",
-                    "expectedControlType": "Quaternion",
+                    "name": "Jump",
+                    "type": "Button",
+                    "id": "a6d63b4c-3d9d-4a92-b1cd-1afc62633777",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleStereo",
+                    "type": "Button",
+                    "id": "cbd94d08-2628-424a-b4c6-6e3dedff0003",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -41,7 +50,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Desktop",
-                    "action": "LookDesktop",
+                    "action": "Look",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -102,12 +111,23 @@
                 },
                 {
                     "name": "",
-                    "id": "c3cbc43c-d965-4691-a2f3-454572e4ce87",
-                    "path": "<AttitudeSensor>/attitude",
+                    "id": "a9bc2329-15cc-45b0-a96d-f438a83e17c0",
+                    "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
-                    "groups": "HandHeld_TouchScreen;Desktop",
-                    "action": "LookHandHeld",
+                    "groups": "Desktop",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "76c288af-07c1-4f41-b981-e3cb714b321c",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Desktop",
+                    "action": "ToggleStereo",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -115,22 +135,6 @@
         }
     ],
     "controlSchemes": [
-        {
-            "name": "HandHeld_TouchScreen",
-            "bindingGroup": "HandHeld_TouchScreen",
-            "devices": [
-                {
-                    "devicePath": "<Touchscreen>",
-                    "isOptional": false,
-                    "isOR": false
-                },
-                {
-                    "devicePath": "<AttitudeSensor>",
-                    "isOptional": false,
-                    "isOR": false
-                }
-            ]
-        },
         {
             "name": "Desktop",
             "bindingGroup": "Desktop",

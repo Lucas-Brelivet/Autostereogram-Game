@@ -1,13 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Video;
 
 public class PlayerController : MonoBehaviour
 {
-
     [SerializeField]
     private Transform head;
+
+    [SerializeField]
+    private new Rigidbody rigidbody;
 
     [SerializeField]
     private float movementSpeed = 1.5f;
@@ -15,60 +19,98 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float cameraRotationSensitivity = 1;
 
-    private Vector3 velocity;
+    [SerializeField]
+    private float jumpImpulseSpeed = 2;
 
-    private void Start()
+    [SerializeField][Tooltip("Max slope angle that the player can stand on in degrees")]
+    private float maxSlopeAngle = 45;
+
+    [SerializeField]
+    private AutostereogramGenerator autostereogramGenerator;
+    
+    [SerializeField]
+    private Camera normalCamera;
+
+    private bool playerIsOnGround = true;
+    private Vector2 movementInputVector = Vector2.zero;
+
+    private void FixedUpdate()
     {
+        rigidbody.velocity = transform.TransformVector(new Vector3(movementInputVector.x, 0, movementInputVector.y).normalized * movementSpeed + Vector3.up * rigidbody.velocity.y);
 
+        playerIsOnGround = false;
     }
 
-    private void Update()
+    private void OnCollisionStay(Collision collision)
     {
-        if(AttitudeSensor.current != null && !AttitudeSensor.current.enabled)
+        foreach(ContactPoint contact in collision.contacts)
         {
-            if(!AttitudeSensor.current.enabled)
+            if(AngleToUpDegrees(contact.normal) < 90 - maxSlopeAngle)
             {
-                InputSystem.EnableDevice(AttitudeSensor.current);
-            }
-            Debug.Log(AttitudeSensor.current.attitude.ReadValue());
+                playerIsOnGround = true;
+                break;
+            } 
         }
-        transform.Translate(velocity * Time.deltaTime, Space.Self);
+    }
+
+    /// <summary>
+    /// calculates the angle in degrees between a vector and the up direction
+    /// </summary>
+    private float AngleToUpDegrees(Vector3 vector)
+    {
+        return Mathf.Acos(Vector3.Dot(vector, Vector3.up)) * 180 / Mathf.PI;
     }
 
     public void OnMove(InputAction.CallbackContext context)
     {
-        Vector2 inputVector = context.ReadValue<Vector2>();
-        velocity = new Vector3(inputVector.x, 0, inputVector.y).normalized * movementSpeed;
-    }
-
-    public void OnLookDesktop(InputAction.CallbackContext context)
-    {
-        Vector2 mouseDelta = context.ReadValue<Vector2>();
-        float yAngle = mouseDelta.x * cameraRotationSensitivity;
-        transform.Rotate(Vector3.up, yAngle, Space.World);
-
-        float xAngle = -mouseDelta.y * cameraRotationSensitivity;
-        float newHeadAngle = head.localRotation.eulerAngles.x + xAngle;
-        newHeadAngle = (newHeadAngle + 180) % 360 - 180;
-        if(newHeadAngle >= 90)
+        if(context.performed || context.canceled)
         {
-            head.localRotation = Quaternion.AngleAxis(90, Vector3.right);
-        }
-        else if(newHeadAngle <= -90)
-        {
-            head.localRotation = Quaternion.AngleAxis(-90, Vector3.right);
-        }
-        else
-        {
-            head.localRotation = Quaternion.AngleAxis(newHeadAngle, Vector3.right);
+            movementInputVector = context.ReadValue<Vector2>();
         }
     }
 
-    public void OnLookHandHeld(InputAction.CallbackContext context)
+    public void OnLook(InputAction.CallbackContext context)
     {
-        Quaternion attitude = context.ReadValue<Quaternion>();
-        Debug.Log(attitude);
-        head.localRotation = attitude;
+        if(context.performed)
+        {
+            Vector2 mouseDelta = context.ReadValue<Vector2>();
+            float yAngle = mouseDelta.x * cameraRotationSensitivity;
+            transform.Rotate(Vector3.up, yAngle, Space.World);
+
+            float xAngle = -mouseDelta.y * cameraRotationSensitivity;
+            float newHeadAngle = head.localRotation.eulerAngles.x + xAngle;
+            newHeadAngle = (newHeadAngle + 180) % 360 - 180;
+            if(newHeadAngle >= 90)
+            {
+                head.localRotation = Quaternion.AngleAxis(90, Vector3.right);
+            }
+            else if(newHeadAngle <= -90)
+            {
+                head.localRotation = Quaternion.AngleAxis(-90, Vector3.right);
+            }
+            else
+            {
+                head.localRotation = Quaternion.AngleAxis(newHeadAngle, Vector3.right);
+            }
+        }
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if(context.performed && playerIsOnGround)
+        {
+            rigidbody.velocity += Vector3.up * jumpImpulseSpeed;
+        }
+    }
+
+    public void OnToggleStereo(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            bool isStereoActive = autostereogramGenerator.gameObject.activeSelf;
+            autostereogramGenerator.SetActive(!isStereoActive);
+            normalCamera.gameObject.SetActive(isStereoActive);
+        }
     }
 
 

@@ -14,8 +14,5 @@ public class DepthCamera : MonoBehaviour
     void Start()
     {
         depthCamera.SetReplacementShader(depthShader, null);
-        depthCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, depth: 32, format: GraphicsFormat.R32_SFloat);
-        depthCamera.backgroundColor = Color.red;
-        depthCamera.farClipPlane = AutostereogramGenerator.MaxDepthValue;
     }
 }

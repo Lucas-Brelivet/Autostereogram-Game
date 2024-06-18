@@ -73,8 +73,7 @@ Shader "Unlit/Autostereogram"
             //reads the depth from the given depth texture at the given uv
             float readDepth(sampler2D depthTex, float2 uv)
             {
-                return tex2D(depthTex, uv)*_MaxDepthValue;
-                return max(tex2D(depthTex, uv)*_MaxDepthValue, _EyesToScreenDistance * 2);
+                return max(DecodeFloatRGBA(tex2D(depthTex, uv))*_MaxDepthValue, _EyesToScreenDistance * 2);
             }
 
 
@@ -108,7 +107,6 @@ Shader "Unlit/Autostereogram"
                 float2 rightEyeDepthUV = i.uv - float2(normalizedPanelWidth, 0);
                 //Get the depth that the right eye sees
                 float rightDepth = readDepth(_RightDepthTex, rightEyeDepthUV);
-                return rightDepth/_MaxDepthValue;
                 //Determine where the left eye should be looking on the screen to see the correct depth, using Thales' theorem
                 float2 leftEyeScreenUV = float2(i.uv.x - (_PupilDistance * (rightDepth - _EyesToScreenDistance) / rightDepth) * _PixelsPerMeter * _MainTex_TexelSize.x, i.uv.y);
                 //return 1-((i.uv-leftEyeScreenUV).x-normalizedPanelWidth)/normalizedPanelWidth;

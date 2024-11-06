@@ -117,7 +117,7 @@ Shader "Custom/WorldSizeTexture"
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
 
-            o.Normal = UnpackNormal(tex2D (_NormalMap, uv_MainTex));
+            o.Normal = UnpackNormal(tex2Dgrad (_NormalMap, uv_MainTex, _ddx, _ddy));
             o.Normal.xy *= _NormalScale;
             o.Normal = normalize(o.Normal);
         }

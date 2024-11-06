@@ -2,7 +2,7 @@
     "name": "PlayerControls",
     "maps": [
         {
-            "name": "Controls",
+            "name": "Movements",
             "id": "a118181d-e7fd-44e7-bc0f-4fa708ab0e01",
             "actions": [
                 {
@@ -27,15 +27,6 @@
                     "name": "Jump",
                     "type": "Button",
                     "id": "a6d63b4c-3d9d-4a92-b1cd-1afc62633777",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "ToggleStereo",
-                    "type": "Button",
-                    "id": "cbd94d08-2628-424a-b4c6-6e3dedff0003",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -119,15 +110,108 @@
                     "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false
-                },
+                }
+            ]
+        },
+        {
+            "name": "Display",
+            "id": "39152c44-25a0-416b-a7bc-5afc197f90da",
+            "actions": [
+                {
+                    "name": "ToggleStereo",
+                    "type": "Button",
+                    "id": "57388371-56f8-4994-80fd-8cac8252318c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
                 {
                     "name": "",
-                    "id": "76c288af-07c1-4f41-b981-e3cb714b321c",
+                    "id": "124fdc40-84b7-42a0-84ae-513df1b57c56",
                     "path": "<Keyboard>/f",
                     "interactions": "",
                     "processors": "",
                     "groups": "Desktop",
                     "action": "ToggleStereo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Interactions",
+            "id": "8c449796-0188-42aa-aa23-1cdcf11167f4",
+            "actions": [
+                {
+                    "name": "Interact",
+                    "type": "Button",
+                    "id": "36bdf20f-2bfd-45c4-9ed8-116d579a3b5f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3116e275-f0db-4c3b-9282-ab188a549eba",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Desktop",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "MouseInteraction",
+            "id": "4975b0e4-933a-4bec-82cb-115a2c4f2918",
+            "actions": [
+                {
+                    "name": "Click",
+                    "type": "Button",
+                    "id": "994cca9b-aa10-4441-b510-ffc3c1a3cc3c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MousePosition",
+                    "type": "Value",
+                    "id": "628cf82d-7fc8-42a6-99eb-abb7be794e4d",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "a5da3900-7cfa-44ae-88c4-94082582ce28",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Desktop",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fdfb15dd-a376-45b1-b78e-05910f9b46bb",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Desktop",
+                    "action": "MousePosition",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

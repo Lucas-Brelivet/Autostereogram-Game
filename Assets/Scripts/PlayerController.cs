@@ -7,6 +7,7 @@ using UnityEngine.Video;
 
 public class PlayerController : MonoBehaviour
 {
+    #region Serialized fields
     [SerializeField]
     private Transform head;
 
@@ -31,8 +32,29 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private Camera normalCamera;
 
+    [SerializeField]
+    public PlayerInput input;
+
+    #endregion
+
+    #region Non-serialized private fields
     private bool playerIsOnGround = true;
     private Vector2 movementInputVector = Vector2.zero;
+    private Pose initialHeadLocalPose;
+    private List<Interactable> interactables = new List<Interactable>();
+    private Interactable currentInteractable;
+    private Clickable currentClickable;
+
+    #endregion
+
+    #region Unity functions
+    private void Start()
+    {
+        initialHeadLocalPose = new Pose(head.localPosition, head.localRotation);
+
+        input.actions.FindActionMap("Display").Enable();
+        input.actions.FindActionMap("Interactions").Enable();
+    }
 
     private void FixedUpdate()
     {
@@ -53,6 +75,27 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        Interactable interactable = other.GetComponent<Interactable>();
+        if(interactable)
+        {
+            interactables.Add(interactable);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        Interactable interactable = other.GetComponent<Interactable>();
+        if(interactable)
+        {
+            interactables.Remove(interactable);
+        }
+    }
+
+    #endregion
+
+    #region Helper functions
     /// <summary>
     /// calculates the angle in degrees between a vector and the up direction
     /// </summary>
@@ -60,7 +103,9 @@ public class PlayerController : MonoBehaviour
     {
         return Mathf.Acos(Vector3.Dot(vector, Vector3.up)) * 180 / Mathf.PI;
     }
+    #endregion
 
+    #region Input fuctions
     public void OnMove(InputAction.CallbackContext context)
     {
         if(context.performed || context.canceled)
@@ -113,5 +158,64 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if(currentInteractable)
+        {
+            currentInteractable.EndInteraction(this);
+            currentInteractable = null;
+        }
+        else if(interactables.Count > 0)
+        {
+            currentInteractable = interactables[interactables.Count-1];
+            currentInteractable.Interact(this);
+        }
+    }
+
+    public void OnClick(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            Vector2 mousePosition = input.actions.FindAction("MousePosition").ReadValue<Vector2>();
+
+            Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+            RaycastHit hit = new RaycastHit();
+
+            if(Physics.Raycast(ray, out hit))
+            {
+                currentClickable = hit.collider.GetComponent<Clickable>();
+                if(currentClickable)
+                {
+                    currentClickable.ClickDown();
+                }
+            }
+        }
+        else if(context.canceled && currentClickable)
+        {
+            currentClickable.ClickUp();
+        }
+        
+    }
+    #endregion
+
+    #region Public methods
+
+    public void SetHeadPose(Pose pose)
+    {
+        head.position = pose.position;
+        head.rotation = pose.rotation;
+    }
+
+    public void ReinitializeHeadPose()
+    {
+        head.localPosition = initialHeadLocalPose.position;
+        head.localRotation = initialHeadLocalPose.rotation;
+    }
+
+    public void StartMouseInteraction()
+    {
+        input.actions.FindActionMap("MouseInteraction").Enable();
+    }
+    #endregion
 
 }

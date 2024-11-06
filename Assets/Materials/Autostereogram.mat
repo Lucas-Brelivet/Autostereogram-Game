@@ -53,6 +53,6 @@ Material:
     - _PanelWidth: 218
     - _PixelsPerMeter: 4724.4
     - _PupilDistance: 0.06
-    - _RandomSeed: 48
+    - _RandomSeed: 649
     m_Colors: []
   m_BuildTextureStacks: []

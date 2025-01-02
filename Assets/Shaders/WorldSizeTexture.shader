@@ -7,6 +7,7 @@ Shader "Custom/WorldSizeTexture"
         [Space]
         [MainTexture] _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _DetailTex ("Detail Texture", 2D) = "black" {}
+        _DetailAlpha ("Detail Alpha", Range(0,1)) = 1
         _PatternSize ("Patterns size (main U, main V, details U, details V)", Vector) = (1,1,1,1)
         [Normal] _NormalMap ("Normalmap", 2D) = "bump" {}
         _NormalScale("Normal Scale", Float) = 1
@@ -43,6 +44,7 @@ Shader "Custom/WorldSizeTexture"
         float4 _PatternSize;
         float _PatternUSize;
         float _PatternVSize;
+        float _DetailAlpha;
 
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -77,7 +79,7 @@ Shader "Custom/WorldSizeTexture"
             return scale;
         }
 
-        void vert(inout appdata_tan v)
+        void vert(inout appdata_full v)
         {
             //project the position on the tangent plane
             float3 scale = getObjectScale();
@@ -109,10 +111,12 @@ Shader "Custom/WorldSizeTexture"
             float2 _detailDdy = ddy(uv_DetailDerivatives);
 
             fixed4 detailColor = tex2Dgrad (_DetailTex, uv_DetailTex, _detailDdx, _detailDdy) * _Color;
+            
+            float detailAlpha = detailColor.a * _DetailAlpha;
 
             //alpha blend the details with the main texture
-            o.Alpha = detailColor.a + c.a * (1-detailColor.a);
-            o.Albedo = (detailColor.rgb * detailColor.a + c.rgb * c.a * (1-detailColor.a))/o.Alpha;
+            o.Alpha = detailAlpha + c.a * (1-detailAlpha);
+            o.Albedo = (detailColor.rgb * detailAlpha + c.rgb * c.a * (1-detailAlpha))/o.Alpha;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

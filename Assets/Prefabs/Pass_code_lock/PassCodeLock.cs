@@ -48,13 +48,15 @@ public class PassCodeLock : FocusedInteractable
 
     public void Enter()
     {
-        if(screen.text == password)
+        if (screen.text == password)
         {
             onCorrectPasswordEntered?.Invoke();
             Debug.Log("Correct password");
         }
-        
-        Debug.Log("Wrong password");
+        else
+        {
+            Debug.Log("Wrong password");
+        }
     }
 
     public void SetPassword(string password)

@@ -123,5 +123,15 @@ public class AutostereogramGenerator : MonoBehaviour
         gameObject.SetActive(setActive);
         rightEyeDepthCamera.gameObject.SetActive(setActive);
         leftEyeDepthCamera.gameObject.SetActive(setActive);
+        if(setActive)
+        {
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 24;
+        }
+        else
+        {
+            QualitySettings.vSyncCount = 1;
+            Application.targetFrameRate = 60;
+        }
     }
 }

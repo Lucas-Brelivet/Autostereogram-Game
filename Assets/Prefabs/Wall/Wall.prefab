@@ -67,7 +67,11 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 4ed551ab1a836134ca8280936c781d17, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: f43983139598c724da4eaaa10301fa3c, type: 2}
+      objectReference: {fileID: 2100000, guid: 0558e14d23b20654aadbcb0e30d95f84, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 4ed551ab1a836134ca8280936c781d17, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 902722322669581900, guid: 25ed48aa5f09c8d49ab0b41543f441c2, type: 3}
     - target: {fileID: 919132149155446097, guid: 4ed551ab1a836134ca8280936c781d17, type: 3}
       propertyPath: m_Name
       value: Wall

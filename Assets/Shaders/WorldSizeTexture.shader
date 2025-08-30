@@ -86,7 +86,8 @@ Shader "Custom/WorldSizeTexture"
             float3 unscaledPosition = v.vertex.xyz/v.vertex.w * scale;
 
             float3 tangent = normalize(v.tangent.xyz);
-            float3 bitangent = cross(tangent, normalize(v.normal)) * v.tangent.w;
+            //v.tangent.w is 1 or -1 and gives the handedness of the tangent coordinate system
+            float3 bitangent = cross(normalize(v.normal), tangent) * v.tangent.w;
 
             float uPosition = dot(unscaledPosition, tangent);
             float vPosition = dot(unscaledPosition, bitangent);

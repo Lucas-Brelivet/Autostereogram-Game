@@ -83,7 +83,7 @@ Material:
     - _Parallax: 0.02
     - _PixelsPerMeter: 4724.4
     - _PupilDistance: 0.06
-    - _RandomSeed: 247
+    - _RandomSeed: 858
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

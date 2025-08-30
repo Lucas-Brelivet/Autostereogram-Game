@@ -58,8 +58,8 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: FrontDoor|_OpenDoor
-      takeName: FrontDoor|_OpenDoor
+      name: BackDoor|_OpenDoor
+      takeName: BackDoor|_OpenDoor
       internalID: 302510328319047318
       firstFrame: 0
       lastFrame: 90
@@ -85,22 +85,30 @@ ModelImporter:
       transformMask:
       - path: 
         weight: 1
-      - path: BackDoorAnimationSpace
+      - path: BumpyWall
         weight: 0
-      - path: BackDoorAnimationSpace/BackDoor
+      - path: SasInterior
         weight: 0
-      - path: FrontDoorAnimationSpace
+      - path: SasInterior/BackDoorAnimationSpace
         weight: 0
-      - path: FrontDoorAnimationSpace/FrontDoor
+      - path: SasInterior/BackDoorAnimationSpace/BackDoor
         weight: 1
-      - path: Point
+      - path: SasInterior/BackDoorAnimationSpace/BackDoor/BackDoorExterior
+        weight: 1
+      - path: SasInterior/FrontDoorAnimationSpace
+        weight: 0
+      - path: SasInterior/FrontDoorAnimationSpace/FrontDoor
+        weight: 0
+      - path: SasInterior/FrontDoorAnimationSpace/FrontDoor/FrontDoorExterior
+        weight: 0
+      - path: SasInterior/SpotLight
         weight: 0
       maskType: 0
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: BackDoor|_OpenDoor
-      takeName: BackDoor|_OpenDoor
+      name: FrontDoor|_OpenDoor
+      takeName: FrontDoor|_OpenDoor
       internalID: 1556151564687303917
       firstFrame: 0
       lastFrame: 90
@@ -126,25 +134,33 @@ ModelImporter:
       transformMask:
       - path: 
         weight: 1
-      - path: BackDoorAnimationSpace
+      - path: BumpyWall
         weight: 0
-      - path: BackDoorAnimationSpace/BackDoor
+      - path: SasInterior
+        weight: 0
+      - path: SasInterior/BackDoorAnimationSpace
+        weight: 0
+      - path: SasInterior/BackDoorAnimationSpace/BackDoor
+        weight: 0
+      - path: SasInterior/BackDoorAnimationSpace/BackDoor/BackDoorExterior
+        weight: 0
+      - path: SasInterior/FrontDoorAnimationSpace
         weight: 1
-      - path: FrontDoorAnimationSpace
-        weight: 0
-      - path: FrontDoorAnimationSpace/FrontDoor
-        weight: 0
-      - path: Point
+      - path: SasInterior/FrontDoorAnimationSpace/FrontDoor
+        weight: 1
+      - path: SasInterior/FrontDoorAnimationSpace/FrontDoor/FrontDoorExterior
+        weight: 1
+      - path: SasInterior/SpotLight
         weight: 0
       maskType: 0
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: BackDoor|IdleDoorOpen
-      takeName: BackDoor|_OpenDoor
+      name: FrontDoor|IdleDoorOpen
+      takeName: FrontDoor|IdleDoorOpen
       internalID: -5041174450302345826
-      firstFrame: 89
-      lastFrame: 90
+      firstFrame: 0
+      lastFrame: 1
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -169,11 +185,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: FrontDoor|IdleDoorOpen
-      takeName: FrontDoor|_OpenDoor
+      name: BackDoor|IdleDoorOpen
+      takeName: BackDoor|IdleDoorOpen
       internalID: -2044138713186253306
-      firstFrame: 89
-      lastFrame: 90
+      firstFrame: 0
+      lastFrame: 1
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -213,7 +229,7 @@ ModelImporter:
     nodeNameCollisionStrategy: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
-    generateSecondaryUV: 1
+    generateSecondaryUV: 0
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1

@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
-using UnityEditor.Search;
 using UnityEngine;
 
 public class AutostereogramGenerator : MonoBehaviour
@@ -16,6 +15,8 @@ public class AutostereogramGenerator : MonoBehaviour
     private Camera leftEyeDepthCamera;
     [SerializeField]
     private Camera rightEyeDepthCamera;
+    [SerializeField]
+    private Camera normalCamera;
 
     [SerializeField]
     private RectTransform leftVisualGuide;
@@ -41,57 +42,22 @@ public class AutostereogramGenerator : MonoBehaviour
     private int maxPixelInterval;
 
     private int panelWidth;
-    
 
     void Awake()
     {
         //Add a camera that doesn't render anyting so that OnRenderImage gets called
         gameObject.AddComponent<Camera>().cullingMask = 0;
 
-        //Set various variables
-        float physicalPixelsPerMeter = Screen.dpi * 39.37f;
-        texturePixelsPerMeter = physicalPixelsPerMeter/texelSize;
-        stereoImage = new RenderTexture((int)(Screen.width / physicalPixelsPerMeter * texturePixelsPerMeter), (int)(Screen.height / physicalPixelsPerMeter * texturePixelsPerMeter), 0)
-        {
-            filterMode = FilterMode.Point
-        };
-        //texturePixelsPerMeter = physicalPixelsPerMeter / Screen.width * stereoImage.width ;
-        maxPixelInterval = (int)(pupilDistance * texturePixelsPerMeter);
-        panelWidth = maxPixelInterval / 2;
-        float horizontalFOV = 2 * Mathf.Atan(Screen.width / physicalPixelsPerMeter / 2 / eyesToScreenDistance) * 180 / Mathf.PI;
-        float verticalFOV = Camera.HorizontalToVerticalFieldOfView(horizontalFOV, Screen.width/Screen.height);
-        Shader.SetGlobalFloat("_MaxDepthValue", maxDepthValue);
-        
-        //Configure both depth cameras
-        ConfigureDepthCamera(leftEyeDepthCamera, verticalFOV, new Vector3(-pupilDistance/2, 0, 0));
-        ConfigureDepthCamera(rightEyeDepthCamera, verticalFOV, new Vector3(pupilDistance/2, 0, 0));
-
         //Set material properties
+        Shader.SetGlobalFloat("_MaxDepthValue", maxDepthValue);
         autostereogramMaterial.SetFloat("_PupilDistance", pupilDistance);
-        autostereogramMaterial.SetFloat("_PixelsPerMeter", texturePixelsPerMeter);
         autostereogramMaterial.SetFloat("_EyesToScreenDistance", eyesToScreenDistance);
-        autostereogramMaterial.SetTexture("_LeftDepthTex", leftEyeDepthCamera.targetTexture);
-        autostereogramMaterial.SetTexture("_RightDepthTex", rightEyeDepthCamera.targetTexture);
 
-
-        //Position visual guides
-        leftVisualGuide.anchoredPosition = new Vector2(-pupilDistance/2f * 1000, leftVisualGuide.anchoredPosition.y);
-        rightVisualGuide.anchoredPosition = new Vector2(pupilDistance/2f * 1000, rightVisualGuide.anchoredPosition.y);
+        ConfigureStereoImage(); //Mostly redundant, but needed for the normal camera configuration
 
         SetActive(false);
     }
 
-    private void ConfigureDepthCamera(Camera depthCamera, float verticalFOV, Vector3 localPosition)
-    {
-        depthCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, depth: 32, RenderTextureFormat.Default, RenderTextureReadWrite.Linear)
-        {
-            filterMode = FilterMode.Point
-        };
-        depthCamera.backgroundColor = Color.white;
-        depthCamera.farClipPlane = maxDepthValue;
-        depthCamera.fieldOfView = verticalFOV;
-        depthCamera.transform.localPosition = localPosition;
-    }
 
     // Called when the camera component on this object finishes rendering
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -121,17 +87,62 @@ public class AutostereogramGenerator : MonoBehaviour
     public void SetActive(bool setActive)
     {
         gameObject.SetActive(setActive);
-        rightEyeDepthCamera.gameObject.SetActive(setActive);
-        leftEyeDepthCamera.gameObject.SetActive(setActive);
-        if(setActive)
-        {
-            QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = 24;
-        }
-        else
+        if(!setActive)
         {
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
+            return;
         }
+        ConfigureStereoImage();
+        rightEyeDepthCamera.gameObject.SetActive(setActive);
+        leftEyeDepthCamera.gameObject.SetActive(setActive);
+
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 24;
+    }
+
+    private void ConfigureStereoImage()
+    {
+        //Set various variables
+        float physicalPixelsPerMeter = Screen.dpi * 39.37f;
+        texturePixelsPerMeter = physicalPixelsPerMeter / texelSize;
+        stereoImage = new RenderTexture((int)(Screen.width / physicalPixelsPerMeter * texturePixelsPerMeter), (int)(Screen.height / physicalPixelsPerMeter * texturePixelsPerMeter), 0)
+        {
+            filterMode = FilterMode.Point
+        };
+        maxPixelInterval = (int)(pupilDistance * texturePixelsPerMeter);
+        panelWidth = maxPixelInterval / 2;
+        float horizontalFOV = 2 * Mathf.Atan(Screen.width / 2 / physicalPixelsPerMeter / eyesToScreenDistance) * 180 / Mathf.PI;
+        float verticalFOV = Camera.HorizontalToVerticalFieldOfView(horizontalFOV, Screen.width / Screen.height);
+
+        //Configure both depth cameras
+        ConfigureDepthCamera(leftEyeDepthCamera, verticalFOV, new Vector3(-pupilDistance / 2, 0, 0));
+        ConfigureDepthCamera(rightEyeDepthCamera, verticalFOV, new Vector3(pupilDistance / 2, 0, 0));
+
+        //also configure the normal camera FOV for consistency between views.
+        normalCamera.fieldOfView = verticalFOV;
+
+        //Position visual guides
+        leftVisualGuide.anchoredPosition = new Vector2(-pupilDistance / 2f * 1000, leftVisualGuide.anchoredPosition.y);
+        rightVisualGuide.anchoredPosition = new Vector2(pupilDistance / 2f * 1000, rightVisualGuide.anchoredPosition.y);
+
+
+        autostereogramMaterial.SetFloat("_PixelsPerMeter", texturePixelsPerMeter);
+    }
+    private void ConfigureDepthCamera(Camera depthCamera, float verticalFOV, Vector3 localPosition)
+    {
+        depthCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, depth: 32, RenderTextureFormat.Default, RenderTextureReadWrite.Linear)
+        {
+            filterMode = FilterMode.Point
+        };
+        depthCamera.backgroundColor = Color.white;
+        depthCamera.farClipPlane = maxDepthValue;
+        depthCamera.fieldOfView = verticalFOV;
+        depthCamera.transform.localPosition = localPosition;
+
+        //Communicate the new textures to the stereo shader
+        autostereogramMaterial.SetTexture("_LeftDepthTex", leftEyeDepthCamera.targetTexture);
+        autostereogramMaterial.SetTexture("_RightDepthTex", rightEyeDepthCamera.targetTexture);
+
     }
 }

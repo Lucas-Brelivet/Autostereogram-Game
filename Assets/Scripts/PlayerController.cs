@@ -12,19 +12,31 @@ public class PlayerController : MonoBehaviour
     private Transform head;
 
     [SerializeField]
-    private new Rigidbody rigidbody;
+    private CharacterController characterController;
 
     [SerializeField]
-    private float movementSpeed = 1.5f;
+    private float walkingSpeed = 1.5f;
+
+    [SerializeField]
+    private float runningSpeed = 4f;
+
+    [SerializeField]
+    private float accelerationOnGround = 3f;
+
+    [SerializeField]
+    private float decelerationOnGround = 6f;
+
+    [SerializeField]
+    private float accelerationInAir = 1.5f;
+
+    [SerializeField]
+    private float decelerationInAir = 3f;
 
     [SerializeField]
     private float cameraRotationSensitivity = 1;
 
     [SerializeField]
-    private float jumpImpulseSpeed = 2;
-
-    [SerializeField][Tooltip("Max slope angle that the player can stand on in degrees")]
-    private float maxSlopeAngle = 45;
+    private float jumpHeight = 1;
 
     [SerializeField]
     private AutostereogramGenerator autostereogramGenerator;
@@ -35,11 +47,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     public PlayerInput input;
 
+    [SerializeField]
+    [Range(0,1)]
+    private float movementInputDeadZone = 0.1f;
+
     #endregion
 
     #region Non-serialized private fields
-    private bool playerIsOnGround = true;
-    private Vector2 movementInputVector = Vector2.zero;
+    //Velocity in object space;
+    private Vector3 horizontalVelocity;
+    private Vector3 verticalVelocity;
+    private bool sprinting = false;
+    private Vector3 movementInputVector = Vector3.zero;
     private Pose initialHeadLocalPose;
     private List<Interactable> interactables = new List<Interactable>();
     private Interactable currentInteractable;
@@ -58,22 +77,11 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rigidbody.velocity = transform.TransformVector(new Vector3(movementInputVector.x, 0, movementInputVector.y).normalized * movementSpeed + Vector3.up * rigidbody.velocity.y);
-
-        playerIsOnGround = false;
+        UpdateHorizontalVelocity();
+        ApplyGravity();
+        characterController.Move(transform.TransformVector((horizontalVelocity + verticalVelocity) * Time.fixedDeltaTime));
     }
 
-    private void OnCollisionStay(Collision collision)
-    {
-        foreach(ContactPoint contact in collision.contacts)
-        {
-            if(AngleToUpDegrees(contact.normal) < 90 - maxSlopeAngle)
-            {
-                playerIsOnGround = true;
-                break;
-            } 
-        }
-    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -96,13 +104,41 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region Helper functions
-    /// <summary>
-    /// calculates the angle in degrees between a vector and the up direction
-    /// </summary>
-    private float AngleToUpDegrees(Vector3 vector)
+    private void UpdateHorizontalVelocity()
     {
-        return Mathf.Acos(Vector3.Dot(vector, Vector3.up)) * 180 / Mathf.PI;
+        float horizontalSpeed = horizontalVelocity.magnitude;
+        float currentTargetSpeed = sprinting ? runningSpeed : walkingSpeed;
+        float accelerationMultiplier = sprinting ? runningSpeed / walkingSpeed : 1;
+
+        if (movementInputVector.magnitude < movementInputDeadZone || horizontalSpeed > currentTargetSpeed)
+        {
+            float decelerationValue = characterController.isGrounded ? decelerationOnGround : decelerationInAir;
+            float deltaSpeed = decelerationValue * accelerationMultiplier * Time.fixedDeltaTime;
+            
+            horizontalVelocity = deltaSpeed >= horizontalSpeed ? Vector3.zero : horizontalVelocity * (1 - deltaSpeed/horizontalSpeed);
+        }
+        else
+        {
+            float accelerationValue = characterController.isGrounded ? accelerationOnGround : accelerationInAir;
+            float deltaSpeed = accelerationValue * accelerationMultiplier * Time.fixedDeltaTime;
+
+            horizontalVelocity += deltaSpeed * movementInputVector;
+            horizontalSpeed = horizontalVelocity.magnitude;
+            if(horizontalSpeed > currentTargetSpeed)
+            {
+                horizontalVelocity *= currentTargetSpeed / horizontalSpeed;
+            }
+        }
     }
+
+    private void ApplyGravity()
+    {
+        if(!characterController.isGrounded)
+        {
+            verticalVelocity += Physics.gravity * Time.fixedDeltaTime;
+        }
+    }
+
     #endregion
 
     #region Input fuctions
@@ -110,7 +146,8 @@ public class PlayerController : MonoBehaviour
     {
         if(context.performed || context.canceled)
         {
-            movementInputVector = context.ReadValue<Vector2>();
+            Vector2 inputVector = context.ReadValue<Vector2>();
+            movementInputVector = new Vector3(inputVector.x, 0, inputVector.y);
         }
     }
 
@@ -142,9 +179,9 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if(context.performed && playerIsOnGround)
+        if(context.performed && characterController.isGrounded)
         {
-            rigidbody.velocity += Vector3.up * jumpImpulseSpeed;
+            verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * Physics.gravity.magnitude) * Vector3.up;
         }
     }
 
@@ -196,6 +233,18 @@ public class PlayerController : MonoBehaviour
         }
         
     }
+
+    public void OnSprint(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            sprinting = true;
+        }
+        if(context.canceled)
+        {
+            sprinting = false;
+        }
+    }
     #endregion
 
     #region Public methods
@@ -212,10 +261,6 @@ public class PlayerController : MonoBehaviour
         head.localRotation = initialHeadLocalPose.rotation;
     }
 
-    public void StartMouseInteraction()
-    {
-        input.actions.FindActionMap("MouseInteraction").Enable();
-    }
     #endregion
 
 }
